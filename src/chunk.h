@@ -78,5 +78,6 @@ extern Chunk *chunk_get_by_relid(Oid relid, int16 num_constraints, bool fail_if_
 extern Chunk *chunk_get_by_id(int32 id, int16 num_constraints, bool fail_if_not_found);
 extern bool chunk_exists(const char *schema_name, const char *table_name);
 extern bool chunk_exists_relid(Oid relid);
+extern Hypertable *chunk_get_hypertable(Chunk *chunk);
 
 #endif   /* TIMESCALEDB_CHUNK_H */

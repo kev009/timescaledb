@@ -789,3 +789,9 @@ chunk_exists_relid(Oid relid)
 {
 	return chunk_get_by_relid(relid, 0, false) != NULL;
 }
+
+Hypertable *
+chunk_get_hypertable(Chunk *chunk)
+{
+	return hypertable_get_by_id(chunk->fd.hypertable_id, true);
+}

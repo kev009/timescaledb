@@ -94,3 +94,46 @@ BEGIN
     RETURN time_col_type;
 END
 $BODY$;
+
+CREATE OR REPLACE FUNCTION _timescaledb_internal.get_chunks(
+    hypertable_id INT,
+    time_column NAME,
+    from_element anyelement,
+    to_element   anyelement
+)
+    RETURNS SETOF _timescaledb_catalog.chunk LANGUAGE PLPGSQL STABLE AS
+$BODY$
+DECLARE 
+    time_dimension_row _timescaledb_catalog.dimension;
+    from_time BIGINT;
+    to_time BIGINT;
+BEGIN
+    SELECT * INTO time_dimension_row 
+    FROM _timescaledb_catalog.dimension time_dimension 
+    WHERE time_dimension.hypertable_id = get_chunks.hypertable_id AND time_dimension.column_name = time_column;
+
+    IF time_dimension_row IS NULL AND time_column IS NOT NULL THEN
+        raise 'Invalid time column: %', time_column;
+    END IF;
+
+    from_time := _timescaledb_internal.time_to_internal(from_element, time_dimension_row.column_type);
+    to_time := _timescaledb_internal.time_to_internal(to_element, time_dimension_row.column_type);
+
+    IF from_time IS NOT NULL OR to_time IS NOT NULL THEN
+        RETURN QUERY SELECT c.*
+        FROM _timescaledb_catalog.chunk c
+        INNER JOIN _timescaledb_catalog.dimension time_dimension ON (time_dimension.hypertable_id = c.hypertable_id AND time_dimension.column_name = time_column)
+        INNER JOIN _timescaledb_catalog.dimension_slice ds
+            ON (ds.dimension_id = time_dimension.id)
+        INNER JOIN _timescaledb_catalog.chunk_constraint cc
+            ON (cc.dimension_slice_id = ds.id AND cc.chunk_id = c.id)
+        WHERE (from_time IS NULL OR ds.range_start >= from_time) AND
+              (to_time IS NULL OR ds.range_end <= to_time) AND
+              c.hypertable_id = get_chunks.hypertable_id;
+    ELSE
+        RETURN QUERY SELECT c.*
+        FROM _timescaledb_catalog.chunk c
+        WHERE c.hypertable_id = get_chunks.hypertable_id;
+    END IF;
+END
+$BODY$;

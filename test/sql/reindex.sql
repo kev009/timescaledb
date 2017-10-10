@@ -1,4 +1,4 @@
-CREATE TABLE reindex_test(time timestamp, temp float);
+CREATE TABLE reindex_test(time timestamp, temp float, PRIMARY KEY(time, temp));
 CREATE UNIQUE INDEX reindex_test_time_unique_idx ON reindex_test(time);
 
 -- create hypertable with three chunks
@@ -36,3 +36,6 @@ INSERT INTO reindex_norm VALUES ('2017-01-20T09:00:01', 17.5),
 
 REINDEX (VERBOSE) TABLE reindex_norm;
 REINDEX (VERBOSE) INDEX reindex_norm_time_unique_idx;
+
+SELECT * FROM test.show_constraintsp('_timescaledb_internal.%');
+SELECT * FROM reindex_norm;

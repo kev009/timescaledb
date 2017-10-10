@@ -11,6 +11,7 @@
 #include "subspace_store.h"
 #include "hypertable_cache.h"
 #include "trigger.h"
+#include "scanner.h"
 
 Hypertable *
 hypertable_from_tuple(HeapTuple tuple)
@@ -130,4 +131,41 @@ hypertable_validate_triggers(PG_FUNCTION_ARGS)
 		errmsg("Hypertables do not support transition tables in triggers.")));
 
 	PG_RETURN_VOID();
+}
+
+static bool
+hypertable_tuple_found(TupleInfo *ti, void *data)
+{
+	Hypertable **entry = data;
+
+	*entry = hypertable_from_tuple(ti->tuple);
+	return false;
+}
+
+Hypertable *
+hypertable_get_by_id(int32 hypertable_id, bool fail_if_not_found)
+{
+	Catalog    *catalog = catalog_get();
+	Hypertable *ptr = NULL;
+	ScanKeyData scankey[1];
+	ScannerCtx	scanCtx = {
+		.table = catalog->tables[HYPERTABLE].id,
+		.index = catalog->tables[HYPERTABLE].index_ids[HYPERTABLE_ID_INDEX],
+		.scantype = ScannerTypeIndex,
+		.nkeys = 1,
+		.limit = 1,
+		.scankey = scankey,
+		.data = &ptr,
+		.tuple_found = hypertable_tuple_found,
+		.lockmode = AccessShareLock,
+		.scandirection = ForwardScanDirection,
+	};
+
+	/* Perform an index scan on hypertable_id. */
+	ScanKeyInit(&scankey[0], Anum_hypertable_pkey_idx_id,
+			  BTEqualStrategyNumber, F_INT4EQ, Int32GetDatum(hypertable_id));
+
+	scanner_scan_one(&scanCtx, fail_if_not_found, "Hypertable");
+	
+	return ptr;
 }

@@ -140,6 +140,26 @@ pg_unix_microseconds_to_timestamp(PG_FUNCTION_ARGS)
 	PG_RETURN_TIMESTAMPTZ(timestamp);
 }
 
+PG_FUNCTION_INFO_V1(time_to_internal);
+
+Datum
+time_to_internal(PG_FUNCTION_ARGS)
+{
+	Datum val;
+	Oid type;
+	int64 res;
+	if (PG_ARGISNULL(0))
+	{
+		PG_RETURN_NULL();
+	}
+
+	val = PG_GETARG_DATUM(0);
+	type = PG_GETARG_OID(1);
+
+	res = time_value_to_internal(val, type);
+	PG_RETURN_INT64(res);
+}
+
 
 /*	*/
 int64

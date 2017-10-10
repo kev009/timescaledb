@@ -23,5 +23,7 @@ extern Hypertable *hypertable_from_tuple(HeapTuple tuple);
 extern Chunk *hypertable_get_chunk(Hypertable *h, Point *point);
 extern Oid	hypertable_relid(RangeVar *rv);
 extern bool is_hypertable(Oid relid);
+extern Hypertable *hypertable_get_by_id(int32 hypertable_id, bool fail_if_not_found);
+
 
 #endif   /* TIMESCALEDB_HYPERTABLE_H */
