@@ -28,9 +28,10 @@
 #include <utils/inval.h>
 #include <unistd.h>
 
-#include "hypertable_cache.h"
 #include "catalog.h"
+#include "compat.h"
 #include "extension.h"
+#include "hypertable_cache.h"
 
 void		_cache_invalidate_init(void);
 void		_cache_invalidate_fini(void);
@@ -60,9 +61,7 @@ inval_cache_callback(Datum arg, Oid relid)
 		hypertable_cache_invalidate_callback();
 }
 
-PGDLLEXPORT Datum invalidate_relcache_trigger(PG_FUNCTION_ARGS);
-
-PG_FUNCTION_INFO_V1(invalidate_relcache_trigger);
+TS_FUNCTION_INFO_V1(invalidate_relcache_trigger);
 
 /*
  * This trigger causes the relcache for the cache_inval_proxy table (passed in
@@ -103,9 +102,7 @@ invalidate_relcache_trigger(PG_FUNCTION_ARGS)
 		return PointerGetDatum(trigdata->tg_trigtuple);
 }
 
-PGDLLEXPORT Datum invalidate_relcache(PG_FUNCTION_ARGS);
-
-PG_FUNCTION_INFO_V1(invalidate_relcache);
+TS_FUNCTION_INFO_V1(invalidate_relcache);
 
 /*
  *	This is similar to invalidate_relcache_trigger but not a trigger.
